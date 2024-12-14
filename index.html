@@ -1,3 +1,55 @@
-<HTML>
-<BODY>Hello World</BODY>
-</HTML>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track It 4 Me</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+	<div id="calendar-header">
+	  <button id="prev-month">◀</button>
+	  <span id="month-display"></span>
+	  <button id="next-month">▶</button>
+	</div>
+	<div id="calendar"></div>
+	<div id="menu" class="modal">
+	  <div id="selected-date">Selected date</div>
+	  <button id="start-period">Add Period Start</button>
+	  <button id="end-period">Add Period End</button>
+	  <button id="delete-period">Delete Period</button>
+	  <button id="cancel-menu">Cancel</button>
+	</div>
+
+	<div id="dataManagement">
+		<input type="file" id="importDataInput" style="display: none;" />
+		<button id="importDataBtn">Import Data</button>
+		<button id="exportDataBtn">Export Data</button>
+		<button id="deleteDataBtn">Delete All Data</button>
+	</div>
+
+    <button id="openInfoBtn" class="open-info-btn">?</button>
+
+    <div id="overlay" class="overlay">
+        <div class="overlay-content">
+            <p>
+			This is a lightweight period tracker intended for use on any device that has a web browser. Data is stored on your device only and never on any servers - you own and control your data and always will.
+			</p>
+			<p>Notice any issues? Report them on <a href="https://github.com/Fosnet/track-it-4-me/issues">GitHub</a>.</p>
+            <button id="closeOverlayBtn" class="close-overlay-btn">Close</button>
+        </div>
+    </div>
+
+    <script>
+    </script>
+
+
+
+  <script src="script.js"></script>
+  
+  
+</body>
+</html>
+
+
+
