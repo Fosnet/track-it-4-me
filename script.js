@@ -74,7 +74,18 @@ function renderCalendar() {
 
   monthDisplay.textContent = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-  const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  const daysOfWeek = ['M', 'T', 'W', 'Th', 'F', 'S', 'S'];
+  const headerRow = document.createElement('div');
+
+  daysOfWeek.forEach(day => {
+    const dayCell = document.createElement('div');
+    dayCell.classList.add('day-header');
+    dayCell.classList.add('date-cell');
+    dayCell.textContent = day;
+    calendar.appendChild(dayCell);
+  });
+
+  const firstDay = (new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay() + 6) % 7;
   const monthDays = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
 
   for (let i = 0; i < firstDay; i++) {
@@ -89,8 +100,13 @@ function renderCalendar() {
     dateCell.textContent = day;
 
     const dateString = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
+    const date = new Date(dateString);
+
     if (isDateWithinPeriod(dateString)) {
       dateCell.classList.add('red');
+    }
+    if(date.getDay() == 6 || date.getDay() == 0) {
+      dateCell.classList.add('weekend');
     }
 
     dateCell.addEventListener('click', () => openMenu(dateString));
