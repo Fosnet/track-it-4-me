@@ -108,6 +108,9 @@ function renderCalendar() {
     if(date.getDay() == 6 || date.getDay() == 0) {
       dateCell.classList.add('weekend');
     }
+    if(date.toLocaleDateString() == currentDate.toLocaleDateString()) {
+      dateCell.classList.add('today');
+    }
 
     dateCell.addEventListener('click', () => openMenu(dateString));
     calendar.appendChild(dateCell);
