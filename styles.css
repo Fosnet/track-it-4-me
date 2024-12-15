@@ -18,11 +18,14 @@ body {
   margin-bottom: 5px;
 }
 
-
 #calendar {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 2px;
+}
+
+#month-display {
+  font-size: 20px;
 }
 
 .date-cell {
@@ -33,7 +36,6 @@ body {
 
 .day-header {
   padding: 5px 0;
-  /*background-color: #707070;*/
   font-weight: bold;
   border: 0px;
 }
@@ -47,11 +49,11 @@ body {
 }
 
 .date-cell.red {
-  background-color: red;
+  background-color: #922B21 ;
 }
 
 .date-cell.pink {
-  background-color: pink;
+  background-color: #D98880 ;
 }
 
 .modal {
@@ -70,6 +72,12 @@ body {
   background-color: pink;
 }
 
+.open-info-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    cursor: pointer;
+}
 .open-info-btn {
     position: fixed;
     bottom: 20px;
