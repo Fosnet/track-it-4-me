@@ -76,9 +76,11 @@ function renderCalendar() {
 
   const daysOfWeek = ['M', 'T', 'W', 'Th', 'F', 'S', 'S'];
   const headerRow = document.createElement('div');
+
   daysOfWeek.forEach(day => {
     const dayCell = document.createElement('div');
     dayCell.classList.add('day-header');
+    dayCell.classList.add('date-cell');
     dayCell.textContent = day;
     calendar.appendChild(dayCell);
   });
@@ -98,15 +100,16 @@ function renderCalendar() {
     dateCell.textContent = day;
 
     const dateString = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
+    const date = new Date(dateString);
 
     if (isDateWithinPeriod(dateString)) {
       dateCell.classList.add('red');
     }
-    const date = new Date(dateString);
-    if (date.getDay() === 6 || date.getDay() === 0) {
+    if(date.getDay() == 6 || date.getDay() == 0) {
       dateCell.classList.add('weekend');
     }
-    if (date.toLocaleDateString() === currentDate.toLocaleDateString()) {
+
+    if(date.getDate() === new Date().getDate() && date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear()) {
       dateCell.classList.add('today');
     }
 
@@ -122,33 +125,79 @@ function isDateWithinPeriod(dateString) {
   const dateObj = new Date(dateString);
   for (let entry of periodData) {
     const startDate = new Date(entry.startDate);
-    const endDate = new Date(startDate);
-    endDate.setDate(startDate.getDate() + entry.length - 1);
-
-    if (dateObj >= startDate && dateObj <= endDate) {
-      return true;
+    for (let i = 0; i < entry.length; i++) {
+      const checkDate = new Date(startDate);
+      checkDate.setDate(startDate.getDate() + i);
+      if (checkDate.toISOString().split('T')[0] === dateObj.toISOString().split('T')[0]) {
+        return true;
+      }
     }
   }
   return false;
 }
 
 
-
 function openMenu(dateString) {
   menu.style.display = 'block';
 
+  const clickedDate = new Date(dateString);
+  const isWithinPeriod = isDateWithinPeriod(dateString);
+
+  const startPeriodButton = document.getElementById('start-period');
+  const endPeriodButton = document.getElementById('end-period');
+  const deletePeriodButton = document.getElementById('delete-period');
+  const cancelMenuButton = document.getElementById('cancel-menu');
+  
+  
   const selectedDateElement = document.getElementById('selected-date');
   if (selectedDateElement) {
-    selectedDateElement.textContent = `Selected Date: ${new Date(dateString).toLocaleDateString()}`;
+    selectedDateElement.textContent = `${new Date(dateString).toLocaleDateString()}`;
+  } else {
+    console.error("selected-date element not found");
   }
 
-  const endPeriodButton = document.getElementById('end-period');
+  if (startPeriodButton) {
+    if (!isWithinPeriod) {
+      startPeriodButton.style.display = 'block';
+      startPeriodButton.onclick = () => addPeriod(dateString);
+    } else {
+      startPeriodButton.style.display = 'none';
+    }
+  } else {
+    console.error("start-period button not found");
+  }
+
   if (endPeriodButton) {
-    endPeriodButton.style.display = 'block'; // Always visible
-    endPeriodButton.onclick = () => endPeriod(dateString);
+    if (isWithinPeriod) {
+      endPeriodButton.style.display = 'block';
+      endPeriodButton.onclick = () => endPeriod(dateString);
+    } else {
+      endPeriodButton.style.display = 'none';
+    }
+  } else {
+    console.error("end-period button not found");
+  }
+
+  if (deletePeriodButton) {
+    const periodToDelete = findPeriodByDate(clickedDate);
+    if (periodToDelete) {
+      deletePeriodButton.style.display = 'block';
+      deletePeriodButton.onclick = () => deletePeriod(periodToDelete);
+    } else {
+      deletePeriodButton.style.display = 'none';
+    }
+  } else {
+    console.error("delete-period button not found");
+  }
+  
+  if (cancelMenuButton) {
+    cancelMenuButton.onclick = () => {
+      menu.style.display = 'none';
+    };
+  } else {
+    console.error("cancel-menu button not found");
   }
 }
-
 
 
 function findPeriodByDate(date) {
@@ -166,6 +215,7 @@ function deletePeriod(period) {
     periodData = periodData.filter(entry => entry !== period);
 
     localStorage.setItem('periodData', JSON.stringify(periodData));
+    alert("Period deleted");
 
     renderCalendar();
   }
@@ -175,38 +225,34 @@ function deletePeriod(period) {
 function endPeriod(dateString) {
   const selectedDate = new Date(dateString);
 
-  const activePeriod = periodData.find(entry => {
+  const periodIndex = periodData.findIndex(entry => {
     const startDate = new Date(entry.startDate);
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + entry.length - 1);
 
-    return selectedDate >= startDate;
+    return selectedDate >= startDate && selectedDate <= endDate;
   });
 
-  if (activePeriod) {
-    const startDate = new Date(activePeriod.startDate);
-
-    if (selectedDate > startDate) {
-      const newLength = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-      activePeriod.length = newLength;
-
-      localStorage.setItem('periodData', JSON.stringify(periodData));
-      renderCalendar();
-    } else {
-      alert("Selected date is before the start of the period.");
-    }
-  } else {
-    const newPeriod = {
-      startDate: dateString,
-      length: 7,
-    };
-
-    periodData.push(newPeriod);
-    localStorage.setItem('periodData', JSON.stringify(periodData));
-    renderCalendar();
+  if (periodIndex === -1) {
+    alert("No matching period found for the selected date.");
+    return;
   }
 
-  menu.style.display = 'none';
+  const period = periodData[periodIndex];
+  const startDate = new Date(period.startDate);
+  const newLength = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+  if (newLength < 1) {
+    alert("Invalid period length. Please select a valid date.");
+    return;
+  }
+
+  period.length = newLength;
+
+  localStorage.setItem('periodData', JSON.stringify(periodData));
+  alert("Period end date updated successfully.");
+
+  renderCalendar();
 }
 
 
@@ -246,7 +292,7 @@ function getEstimatedNextPeriod() {
 
   periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
 
-  const relevantPeriods = periodData.slice(0, Math.min(2, periodData.length));
+  const relevantPeriods = periodData.slice(0, Math.min(5, periodData.length));
   if (relevantPeriods.length < 2) {
     const lastPeriodStart = new Date(relevantPeriods[0].startDate);
     const estimatedStart = new Date(lastPeriodStart);
@@ -307,57 +353,20 @@ function getAverageCycleLength() {
 
 
 function highlightEstimatedPeriod() {
-  const dateCells = document.querySelectorAll('.date-cell');
-
-  if (periodData.length === 0) return;
-
-  periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-
-  const lastPeriod = periodData[0];
-  let lastStartDate = new Date(lastPeriod.startDate);
-  let lastLength = lastPeriod.length || 7;
-  const averageCycleLength = getAverageCycleLength();
-
-  const today = new Date();
-  const futurePredictions = [];
-  while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
-    lastStartDate = new Date(lastStartDate);
-    lastStartDate.setDate(lastStartDate.getDate() + averageCycleLength);
-
-    const predictedStart = new Date(lastStartDate);
-    const predictedEnd = new Date(predictedStart);
-    predictedEnd.setDate(predictedStart.getDate() + lastLength - 1);
-
-    futurePredictions.push({ start: predictedStart, end: predictedEnd });
-  }
-
-  dateCells.forEach(cell => {
-    const cellDate = new Date(
-      `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent}`
-    );
-
-    if (isNaN(cellDate)) return;
-
-    let isPredicted = false;
-
-    for (const { start, end } of futurePredictions) {
-      if (cellDate >= start && cellDate <= end) {
-        const dateString = cellDate.toISOString().split('T')[0];
-
-        if (!isDateWithinPeriod(dateString)) {
-          cell.classList.add('pink');
-        } else {
-          cell.classList.remove('pink');
-        }
-        isPredicted = true;
-        break;
+  const { estimatedStart, estimatedEnd } = getEstimatedNextPeriod();
+  if (estimatedStart && estimatedEnd) {
+    const dateCells = document.querySelectorAll('.date-cell');
+    dateCells.forEach(cell => {
+      const cellDate = new Date(
+        `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent}`
+      );
+      if (cellDate >= estimatedStart && cellDate <= estimatedEnd) {
+        cell.classList.add('pink');
+      } else {
+        cell.classList.remove('pink');
       }
-    }
-
-    if (!isPredicted) {
-      cell.classList.remove('pink');
-    }
-  });
+    });
+  }
 }
 
 
