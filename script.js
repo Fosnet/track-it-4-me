@@ -269,11 +269,12 @@ function addPeriod(dateString) {
     console.error("Invalid start date:", dateString);
     return;
   }
-  
+
+    let predictedLength = getAverageBleedLength() || 7;
     const startDate = new Date(dateString);
     const periodEntry = {
       startDate: dateString,
-      length: 7
+      length: predictedLength
     };
 
     periodData.push(periodEntry);
@@ -355,13 +356,13 @@ function getAverageCycleLength() {
     totalDays += Math.floor((startDate1 - startDate2) / (1000 * 60 * 60 * 24));
   }
 
-  const averageCycleLength = Math.round(totalDays / (relevantPeriods.length - 1));
+  const averageCycleLength = Math.round(totalDays / (relevantPeriods.length - 1)) - 1;
   return averageCycleLength;
 }
 
 
 function getAverageBleedLength() {
-  if (periodData.length < 2) {
+  if (periodData.length < 1) {
     return 7;
   }
 
