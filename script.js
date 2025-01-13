@@ -108,7 +108,8 @@ function renderCalendar() {
     if(date.getDay() == 6 || date.getDay() == 0) {
       dateCell.classList.add('weekend');
     }
-    if(date.toLocaleDateString() == currentDate.toLocaleDateString()) {
+
+    if(date.getDate() === new Date().getDate() && date.getMonth() === new Date().getMonth() && date.getFullYear() === new Date().getFullYear()) {
       dateCell.classList.add('today');
     }
 
@@ -136,6 +137,17 @@ function isDateWithinPeriod(dateString) {
 }
 
 
+//function openMenu(dateString) {
+//  menu.style.display = 'block';
+//
+//  const selectedDateElement = document.getElementById('selected-date');
+//  if (selectedDateElement) {
+//    selectedDateElement.textContent = `Selected Date: ${new Date(dateString).toLocaleDateString()}`;
+//  }
+//
+//}
+
+
 function openMenu(dateString) {
   menu.style.display = 'block';
 
@@ -146,8 +158,8 @@ function openMenu(dateString) {
   const endPeriodButton = document.getElementById('end-period');
   const deletePeriodButton = document.getElementById('delete-period');
   const cancelMenuButton = document.getElementById('cancel-menu');
-  
-  
+
+
   const selectedDateElement = document.getElementById('selected-date');
   if (selectedDateElement) {
     selectedDateElement.textContent = `${new Date(dateString).toLocaleDateString()}`;
@@ -167,14 +179,8 @@ function openMenu(dateString) {
   }
 
   if (endPeriodButton) {
-    if (isWithinPeriod) {
-      endPeriodButton.style.display = 'block';
-      endPeriodButton.onclick = () => endPeriod(dateString);
-    } else {
-      endPeriodButton.style.display = 'none';
-    }
-  } else {
-    console.error("end-period button not found");
+    endPeriodButton.style.display = 'block';
+    endPeriodButton.onclick = () => endPeriod(dateString);
   }
 
   if (deletePeriodButton) {
@@ -188,7 +194,7 @@ function openMenu(dateString) {
   } else {
     console.error("delete-period button not found");
   }
-  
+
   if (cancelMenuButton) {
     cancelMenuButton.onclick = () => {
       menu.style.display = 'none';
@@ -214,7 +220,6 @@ function deletePeriod(period) {
     periodData = periodData.filter(entry => entry !== period);
 
     localStorage.setItem('periodData', JSON.stringify(periodData));
-    alert("Period deleted");
 
     renderCalendar();
   }
@@ -224,34 +229,38 @@ function deletePeriod(period) {
 function endPeriod(dateString) {
   const selectedDate = new Date(dateString);
 
-  const periodIndex = periodData.findIndex(entry => {
+  const activePeriod = periodData.find(entry => {
     const startDate = new Date(entry.startDate);
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + entry.length - 1);
 
-    return selectedDate >= startDate && selectedDate <= endDate;
+    return selectedDate >= startDate;
   });
 
-  if (periodIndex === -1) {
-    alert("No matching period found for the selected date.");
-    return;
+  if (activePeriod) {
+    const startDate = new Date(activePeriod.startDate);
+
+    if (selectedDate > startDate) {
+      const newLength = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+      activePeriod.length = newLength;
+
+      localStorage.setItem('periodData', JSON.stringify(periodData));
+      renderCalendar();
+    } else {
+      alert("Selected date is before the start of the period.");
+    }
+  } else {
+    const newPeriod = {
+      startDate: dateString,
+      length: 7,
+    };
+
+    periodData.push(newPeriod);
+    localStorage.setItem('periodData', JSON.stringify(periodData));
+    renderCalendar();
   }
 
-  const period = periodData[periodIndex];
-  const startDate = new Date(period.startDate);
-  const newLength = Math.floor((selectedDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-
-  if (newLength < 1) {
-    alert("Invalid period length. Please select a valid date.");
-    return;
-  }
-
-  period.length = newLength;
-
-  localStorage.setItem('periodData', JSON.stringify(periodData));
-  alert("Period end date updated successfully.");
-
-  renderCalendar();
+  menu.style.display = 'none';
 }
 
 
@@ -351,21 +360,78 @@ function getAverageCycleLength() {
 }
 
 
-function highlightEstimatedPeriod() {
-  const { estimatedStart, estimatedEnd } = getEstimatedNextPeriod();
-  if (estimatedStart && estimatedEnd) {
-    const dateCells = document.querySelectorAll('.date-cell');
-    dateCells.forEach(cell => {
-      const cellDate = new Date(
-        `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent}`
-      );
-      if (cellDate >= estimatedStart && cellDate <= estimatedEnd) {
-        cell.classList.add('pink');
-      } else {
-        cell.classList.remove('pink');
-      }
-    });
+function getAverageBleedLength() {
+  if (periodData.length < 2) {
+    return 7;
   }
+
+  periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+
+  const relevantPeriods = periodData.slice(0, Math.min(5, periodData.length));
+
+  let totalBleedLength = 0;
+  for (let i = 0; i < relevantPeriods.length; i++) {
+    totalBleedLength += relevantPeriods[i].length;
+  }
+
+  const averageBleedLength = Math.round(totalBleedLength / relevantPeriods.length);
+  return averageBleedLength;
+}
+
+
+function highlightEstimatedPeriod() {
+  const dateCells = document.querySelectorAll('.date-cell');
+
+  if (periodData.length === 0) return;
+
+  periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+
+  const lastPeriod = periodData[0];
+  let lastStartDate = new Date(lastPeriod.startDate);
+  let averageBleedLength = getAverageBleedLength() || 7;
+  const averageCycleLength = getAverageCycleLength();
+
+
+  const today = new Date();
+  const futurePredictions = [];
+  while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
+    lastStartDate = new Date(lastStartDate);
+    lastStartDate.setDate(lastStartDate.getDate() + averageCycleLength);
+
+    const predictedStart = new Date(lastStartDate);
+    const predictedEnd = new Date(predictedStart);
+    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength - 1);
+
+    futurePredictions.push({ start: predictedStart, end: predictedEnd });
+  }
+
+  dateCells.forEach(cell => {
+    const cellDate = new Date(
+      `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent}`
+    );
+
+    if (isNaN(cellDate)) return;
+
+    let isPredicted = false;
+
+    for (const { start, end } of futurePredictions) {
+      if (cellDate >= start && cellDate <= end) {
+        const dateString = cellDate.toISOString().split('T')[0];
+
+        if (!isDateWithinPeriod(dateString)) {
+          cell.classList.add('pink');
+        } else {
+          cell.classList.remove('pink');
+        }
+        isPredicted = true;
+        break;
+      }
+    }
+
+    if (!isPredicted) {
+      cell.classList.remove('pink');
+    }
+  });
 }
 
 
