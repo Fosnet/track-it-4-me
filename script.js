@@ -257,7 +257,6 @@ function endPeriod(dateString) {
 
     periodData.push(newPeriod);
     localStorage.setItem('periodData', JSON.stringify(periodData));
-    alert(`New period started on ${selectedDate.toLocaleDateString()}`);
     renderCalendar();
   }
 
@@ -360,6 +359,24 @@ function getAverageCycleLength() {
   return averageCycleLength;
 }
 
+function getAverageBleedLength() {
+  if (periodData.length < 2) {
+    return 7;
+  }
+
+  periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
+
+  const relevantPeriods = periodData.slice(0, Math.min(5, periodData.length));
+
+  let totalBleedLength = 0;
+  for (let i = 1; i < relevantPeriods.length; i++) {
+    totalBleedLength += relevantPeriods[i - 1].length;
+  }
+
+  const averageBleedLength = Math.round(totalBleedLength / (relevantPeriods.length - 1));
+  return averageBleedLength;
+}
+
 
 function highlightEstimatedPeriod() {
   const dateCells = document.querySelectorAll('.date-cell');
@@ -370,8 +387,9 @@ function highlightEstimatedPeriod() {
 
   const lastPeriod = periodData[0];
   let lastStartDate = new Date(lastPeriod.startDate);
-  let lastLength = lastPeriod.length || 7;
+  let averageBleedLength = getAverageBleedLength() || 7;
   const averageCycleLength = getAverageCycleLength();
+
 
   const today = new Date();
   const futurePredictions = [];
@@ -381,7 +399,7 @@ function highlightEstimatedPeriod() {
 
     const predictedStart = new Date(lastStartDate);
     const predictedEnd = new Date(predictedStart);
-    predictedEnd.setDate(predictedStart.getDate() + lastLength - 1);
+    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength - 1);
 
     futurePredictions.push({ start: predictedStart, end: predictedEnd });
   }
