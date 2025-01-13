@@ -137,15 +137,15 @@ function isDateWithinPeriod(dateString) {
 }
 
 
-function openMenu(dateString) {
-  menu.style.display = 'block';
-
-  const selectedDateElement = document.getElementById('selected-date');
-  if (selectedDateElement) {
-    selectedDateElement.textContent = `Selected Date: ${new Date(dateString).toLocaleDateString()}`;
-  }
-
-}
+//function openMenu(dateString) {
+//  menu.style.display = 'block';
+//
+//  const selectedDateElement = document.getElementById('selected-date');
+//  if (selectedDateElement) {
+//    selectedDateElement.textContent = `Selected Date: ${new Date(dateString).toLocaleDateString()}`;
+//  }
+//
+//}
 
 
 function openMenu(dateString) {
@@ -359,6 +359,7 @@ function getAverageCycleLength() {
   return averageCycleLength;
 }
 
+
 function getAverageBleedLength() {
   if (periodData.length < 2) {
     return 7;
@@ -369,11 +370,11 @@ function getAverageBleedLength() {
   const relevantPeriods = periodData.slice(0, Math.min(5, periodData.length));
 
   let totalBleedLength = 0;
-  for (let i = 1; i < relevantPeriods.length; i++) {
-    totalBleedLength += relevantPeriods[i - 1].length;
+  for (let i = 0; i < relevantPeriods.length; i++) {
+    totalBleedLength += relevantPeriods[i].length;
   }
 
-  const averageBleedLength = Math.round(totalBleedLength / (relevantPeriods.length - 1));
+  const averageBleedLength = Math.round(totalBleedLength / relevantPeriods.length);
   return averageBleedLength;
 }
 
