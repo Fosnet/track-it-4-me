@@ -12,3 +12,7 @@ To access the site locally:
 Planned updates:
 - Ability to add a flow description
 - Ability to add mood notes
+
+
+## Importing data
+- [My Calendar (Android)](https://play.google.com/store/apps/details?id=com.popularapp.periodcalendar) - Settings > Export document to doctor > Use `My Calendar-YYY-MM-DD.txt` 

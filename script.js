@@ -23,24 +23,72 @@ function importData(event) {
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      try {
-        const importedData = JSON.parse(e.target.result);
+      const fileContent = e.target.result;
 
+      try {
+        const importedData = JSON.parse(fileContent);
         if (Array.isArray(importedData)) {
           periodData = importedData;
           localStorage.setItem('periodData', JSON.stringify(periodData));
           alert("Data imported successfully!");
           renderCalendar();
+          return;
         } else {
-          throw new Error("Invalid data format");
+          throw new Error("Invalid JSON format");
+        }
+      } catch (error) {
+        console.log("Failed to import as JSON. Attempting custom format...");
+      }
+
+      // Attempt to parse My Calendar (Android)
+      try {
+        const customFormatData = parseMyCalendarAndroid(fileContent);
+        if (customFormatData.length > 0) {
+          periodData = customFormatData;
+          localStorage.setItem('periodData', JSON.stringify(periodData));
+          alert("Data imported successfully!");
+          renderCalendar();
+        } else {
+          throw new Error("No valid data found in custom format");
         }
       } catch (error) {
         alert("Failed to import data. Please ensure the file format is correct.");
+        console.error("Import error:", error);
       }
     };
     reader.readAsText(file);
   }
 }
+
+
+function parseMyCalendarAndroid(fileContent) {
+  const lines = fileContent.split('\n');
+  const parsedPeriods = [];
+
+  let startDate = null;
+  lines.forEach(line => {
+    const [datePart, eventType] = line.trim().split(/\s{2,}|\t+/);
+    if (!datePart || !eventType) return;
+
+    const parsedDate = new Date(datePart);
+    if (isNaN(parsedDate)) {
+      console.warn(`Invalid date format: ${datePart}`);
+      return;
+    }
+
+    if (eventType.toLowerCase() === 'period starts') {
+      startDate = parsedDate.toISOString().split('T')[0];
+    } else if (eventType.toLowerCase() === 'period ends' && startDate) {
+      const endDate = parsedDate;
+      const length = Math.floor((endDate - new Date(startDate)) / (1000 * 60 * 60 * 24)) + 1;
+      parsedPeriods.push({ startDate, length });
+      startDate = null;
+    }
+  });
+
+  return parsedPeriods;
+}
+
 
 
 function deleteAllData() {
