@@ -215,7 +215,6 @@ function deletePeriod(period) {
     periodData = periodData.filter(entry => entry !== period);
 
     localStorage.setItem('periodData', JSON.stringify(periodData));
-    alert("Period deleted");
 
     renderCalendar();
   }
@@ -250,7 +249,6 @@ function endPeriod(dateString) {
   period.length = newLength;
 
   localStorage.setItem('periodData', JSON.stringify(periodData));
-  alert("Period end date updated successfully.");
 
   renderCalendar();
 }
