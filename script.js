@@ -292,52 +292,7 @@ function addPeriod(dateString) {
     currentDate.setMonth(currentDate.getMonth() + 1);
     renderCalendar();
   });
-  
 
-function getEstimatedNextPeriod() {
-  if (periodData.length === 0) {
-    return { estimatedStart: null, estimatedEnd: null };
-  }
-
-  periodData.sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
-
-  const relevantPeriods = periodData.slice(0, Math.min(5, periodData.length));
-  if (relevantPeriods.length < 2) {
-    const lastPeriodStart = new Date(relevantPeriods[0].startDate);
-    const estimatedStart = new Date(lastPeriodStart);
-    const estimatedEnd = new Date(lastPeriodStart);
-    estimatedStart.setDate(lastPeriodStart.getDate() + 28);
-    estimatedEnd.setDate(lastPeriodStart.getDate() + 28 + 6);
-
-    return { estimatedStart, estimatedEnd };
-  }
-
-  let totalDays = 0;
-  for (let i = 1; i < relevantPeriods.length; i++) {
-    const startDate1 = new Date(relevantPeriods[i - 1].startDate);
-    const startDate2 = new Date(relevantPeriods[i].startDate);
-    
-    if (isNaN(startDate1) || isNaN(startDate2)) {
-      console.error(`Invalid startDate at index ${i - 1} or ${i}:`, relevantPeriods[i - 1].startDate, relevantPeriods[i].startDate);
-      continue;
-    }
-
-    totalDays += Math.floor((startDate1 - startDate2) / (1000 * 60 * 60 * 24));
-  }
-
-  const averageCycleLength = Math.round(totalDays / (relevantPeriods.length - 1));
-
-
-  const lastPeriodStart = new Date(relevantPeriods[0].startDate);
-  const estimatedStart = new Date(lastPeriodStart);
-  estimatedStart.setDate(lastPeriodStart.getDate() + averageCycleLength);
-
-  const estimatedEnd = new Date(estimatedStart);
-  estimatedEnd.setDate(estimatedStart.getDate() + 6);
-
-
-  return { estimatedStart, estimatedEnd };
-}
 
 
 function getAverageCycleLength() {
@@ -356,7 +311,7 @@ function getAverageCycleLength() {
     totalDays += Math.floor((startDate1 - startDate2) / (1000 * 60 * 60 * 24));
   }
 
-  const averageCycleLength = Math.round(totalDays / (relevantPeriods.length - 1)) - 1;
+  const averageCycleLength = Math.round(totalDays / (relevantPeriods.length - 1));
   return averageCycleLength;
 }
 
