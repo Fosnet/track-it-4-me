@@ -564,7 +564,6 @@ function highlightEstimatedPeriod() {
   let averageBleedLength = getAverageBleedLength() || 7;
   const averageCycleLength = getAverageCycleLength();
 
-
   const today = new Date();
   const futurePredictions = [];
   while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
@@ -580,7 +579,7 @@ function highlightEstimatedPeriod() {
 
   dateCells.forEach(cell => {
     const cellDate = new Date(
-      `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent}`
+      `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent.trim()}`
     );
 
     if (isNaN(cellDate)) return;
@@ -589,7 +588,7 @@ function highlightEstimatedPeriod() {
 
     for (const { start, end } of futurePredictions) {
       if (cellDate >= start && cellDate <= end) {
-        const dateString = cellDate.toISOString().split('T')[0];
+        const dateString = dateToString(cellDate);
 
         if (!isDateWithinPeriod(dateString)) {
           cell.classList.add('pink');
