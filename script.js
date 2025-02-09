@@ -63,6 +63,10 @@ function importData(event) {
         localStorage.setItem('moodData', JSON.stringify(moodData));
         localStorage.setItem('flowData', JSON.stringify(flowData));
 
+       if (!Array.isArray(parsedData) || !parsedData.every(entry => entry.startDate && typeof entry.length === 'number')) {
+                throw new Error("Not in native format");
+            }
+
         alert("Data imported successfully!");
         renderCalendar();
       } catch (error) {
@@ -77,11 +81,26 @@ function importData(event) {
               alert("Data imported successfully!");
               renderCalendar();
             } else {
-              throw new Error("No valid data found in custom format");
+              throw new Error("No valid data found in MyCalendar format");
             }
           } catch (error) {
-            alert("Failed to import data. Please ensure the file format is correct.");
-            console.error("Import error:", error);
+            try {
+                const customFormatData = parseClueAndroid(e.target.result);
+                if (customFormatData.length > 0) {
+                  periodData = customFormatData;
+                  moodData = {};
+                  flowData = {};
+                  localStorage.setItem('periodData', JSON.stringify(periodData));
+                  alert("Data imported successfully!");
+                  renderCalendar();
+                } else {
+                  throw new Error("No valid data found in Clue format");
+                }
+              } catch (error) {
+                alert("Failed to import data. Please ensure the file format is correct.");
+                console.error("Import error:", error);
+              }
+
           }
       }
 
@@ -91,7 +110,6 @@ function importData(event) {
     reader.readAsText(file);
   }
 }
-
 
 
 function parseMyCalendarAndroid(fileContent) {
@@ -120,6 +138,45 @@ function parseMyCalendarAndroid(fileContent) {
   });
 
   return parsedPeriods;
+}
+
+
+function parseClueAndroid(fileContent) {
+    try {
+        const rawData = JSON.parse(fileContent);
+
+        const dates = rawData.map(entry => entry.date).sort();
+
+        const periodData = [];
+        let currentPeriod = null;
+
+        dates.forEach((date, index) => {
+            const dateObj = new Date(date);
+
+            if (!currentPeriod) {
+                currentPeriod = { startDate: date, length: 1 };
+            } else {
+                const prevDateObj = new Date(dates[index - 1]);
+                const timeDiff = (dateObj - prevDateObj) / (1000 * 60 * 60 * 24);
+
+                if (timeDiff < 3) {
+                    currentPeriod.length += timeDiff;
+                } else {
+                    periodData.push(currentPeriod);
+                    currentPeriod = { startDate: date, length: 1 };
+                }
+            }
+        });
+
+        if (currentPeriod) {
+            periodData.push(currentPeriod);
+        }
+
+        return periodData;
+    } catch (error) {
+        console.error("Error parsing alternative format:", error);
+        return [];
+    }
 }
 
 
@@ -198,7 +255,6 @@ function renderCalendar() {
     dayNumber.classList.add('day-number');
 
     const emojiContainer = document.createElement('div');
-    emojiContainer.classList.add('mood-container');
     const moods = getMoodsForDate(dateString);
     let flows = [];
     if (isDateWithinPeriod(dateString)) {
