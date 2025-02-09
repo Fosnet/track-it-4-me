@@ -3,6 +3,28 @@ body {
   background-color: black;
 }
 
+#menu {
+  position: absolute;
+  border: 1px solid #ccc;
+  padding: 10px;
+  z-index: 1000;
+  display: table-cell;
+}
+
+#menu-content {
+  display: in-line block;
+  justify-content: center;
+  width: 100%;
+  padding: 2px;
+}
+
+.menu-item {
+  width: 100%;
+  display: flex;
+  align: center;
+  justify-content: center;
+}
+
 #calendar-header {
   display: flex;
   justify-content: space-between;
@@ -29,9 +51,12 @@ body {
 }
 
 .date-cell {
-  border: 1px solid #ccc;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   text-align: center;
+  padding: 5px;
 }
 
 .day-header {

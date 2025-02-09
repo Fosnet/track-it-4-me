@@ -1,18 +1,31 @@
 let selectedDate = null;
 let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
+let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
+let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
 
+const moodList = [
+  " ", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
+];
+const flowList = [
+  " ", "💧", "💦", "🌊"
+];
 
 function exportData() {
-  const dataStr = JSON.stringify(periodData, null, 2);
+  const data = {
+    periodData,
+    moodData,
+    flowData
+  };
+
+  const dataStr = JSON.stringify(data, null, 2);
   const blob = new Blob([dataStr], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  
 
   const downloadLink = document.createElement("a");
   downloadLink.href = url;
-  downloadLink.download = "periodData.json";
+  downloadLink.download = "trackit4me.json";
   downloadLink.click();
-  
+
   URL.revokeObjectURL(url);
   alert("Data export complete");
 }
@@ -23,42 +36,62 @@ function importData(event) {
   if (file) {
     const reader = new FileReader();
     reader.onload = (e) => {
-      const fileContent = e.target.result;
-
       try {
-        const importedData = JSON.parse(fileContent);
-        if (Array.isArray(importedData)) {
+        const importedData = JSON.parse(e.target.result);
+
+        if (importedData.periodData && importedData.moodData && importedData.flowData) {
+          periodData = importedData.periodData;
+          moodData = importedData.moodData;
+          flowData = importedData.flowData;
+        }
+
+        else if (Array.isArray(importedData)) {
           periodData = importedData;
-          localStorage.setItem('periodData', JSON.stringify(periodData));
-          alert("Data imported successfully!");
-          renderCalendar();
-          return;
-        } else {
+          moodData = {};
+          flowData = {};
+        }
+        else if (importedData.periodData) {
+          periodData = importedData.periodData;
+          moodData = importedData.moodData || {};
+          flowData = importedData.flowData || {};
+        }
+        else {
           throw new Error("Invalid JSON format");
         }
+
+        localStorage.setItem('periodData', JSON.stringify(periodData));
+        localStorage.setItem('moodData', JSON.stringify(moodData));
+        localStorage.setItem('flowData', JSON.stringify(flowData));
+
+        alert("Data imported successfully!");
+        renderCalendar();
       } catch (error) {
         console.log("Failed to import as JSON. Attempting custom format...");
+        try {
+            const customFormatData = parseMyCalendarAndroid(e.target.result);
+            if (customFormatData.length > 0) {
+              periodData = customFormatData;
+              moodData = {};
+              flowData = {};
+              localStorage.setItem('periodData', JSON.stringify(periodData));
+              alert("Data imported successfully!");
+              renderCalendar();
+            } else {
+              throw new Error("No valid data found in custom format");
+            }
+          } catch (error) {
+            alert("Failed to import data. Please ensure the file format is correct.");
+            console.error("Import error:", error);
+          }
       }
 
-      // Attempt to parse My Calendar (Android)
-      try {
-        const customFormatData = parseMyCalendarAndroid(fileContent);
-        if (customFormatData.length > 0) {
-          periodData = customFormatData;
-          localStorage.setItem('periodData', JSON.stringify(periodData));
-          alert("Data imported successfully!");
-          renderCalendar();
-        } else {
-          throw new Error("No valid data found in custom format");
-        }
-      } catch (error) {
-        alert("Failed to import data. Please ensure the file format is correct.");
-        console.error("Import error:", error);
-      }
+
+
     };
     reader.readAsText(file);
   }
 }
+
 
 
 function parseMyCalendarAndroid(fileContent) {
@@ -95,10 +128,21 @@ function deleteAllData() {
   const confirmDelete = confirm("Are you sure you want to delete all data? This action cannot be undone.");
   if (confirmDelete) {
     periodData = [];
+    moodData = {};
+    flowData = {};
     localStorage.removeItem('periodData');
+    localStorage.removeItem('moodData');
+    localStorage.removeItem('flowData');
     alert("All data has been deleted.");
     renderCalendar();
   }
+}
+
+
+function dateToString(date) {
+    return date.getFullYear() + '-' +
+                   String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                   String(date.getDate()).padStart(2, '0');
 }
 
 
@@ -145,14 +189,27 @@ function renderCalendar() {
   for (let day = 1; day <= monthDays; day++) {
     const dateCell = document.createElement('div');
     dateCell.classList.add('date-cell');
-    dateCell.textContent = day;
 
-    const dateString = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${day}`;
-    const date = new Date(dateString);
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const dateString = dateToString(date)
 
+    const dayNumber = document.createElement('div');
+    dayNumber.textContent = day;
+    dayNumber.classList.add('day-number');
+
+    const emojiContainer = document.createElement('div');
+    emojiContainer.classList.add('mood-container');
+    const moods = getMoodsForDate(dateString);
+    let flows = [];
     if (isDateWithinPeriod(dateString)) {
+      flows = getFlowsForDate(dateString);
       dateCell.classList.add('red');
     }
+    emojiContainer.textContent = moods.join(" ") + flows.join(" ") || "\xa0";
+
+    dateCell.appendChild(dayNumber);
+    dateCell.appendChild(emojiContainer);
+
     if(date.getDay() == 6 || date.getDay() == 0) {
       dateCell.classList.add('weekend');
     }
@@ -176,7 +233,7 @@ function isDateWithinPeriod(dateString) {
     for (let i = 0; i < entry.length; i++) {
       const checkDate = new Date(startDate);
       checkDate.setDate(startDate.getDate() + i);
-      if (checkDate.toISOString().split('T')[0] === dateObj.toISOString().split('T')[0]) {
+      if (dateToString(checkDate) === dateToString(dateObj)) {
         return true;
       }
     }
@@ -185,71 +242,183 @@ function isDateWithinPeriod(dateString) {
 }
 
 
-//function openMenu(dateString) {
-//  menu.style.display = 'block';
-//
-//  const selectedDateElement = document.getElementById('selected-date');
-//  if (selectedDateElement) {
-//    selectedDateElement.textContent = `Selected Date: ${new Date(dateString).toLocaleDateString()}`;
-//  }
-//
-//}
-
 
 function openMenu(dateString) {
+  const menu = document.getElementById("menu");
+  if (!menu) {
+    console.error("Menu element not found!");
+    return;
+  }
+  menu.innerHTML = ''; // Clear previous content
+
+  const selectedPeriodEntry = periodData.find(entry => entry.startDate === dateString);
+
+  const selectedMoodEntry = moodData[dateString];
+  const selectedFlowEntry = flowData[dateString];
   menu.style.display = 'block';
 
   const clickedDate = new Date(dateString);
   const isWithinPeriod = isDateWithinPeriod(dateString);
+  const moodsForDate = getMoodsForDate(dateString);
+  const flowsForDate = getFlowsForDate(dateString);
 
-  const startPeriodButton = document.getElementById('start-period');
-  const endPeriodButton = document.getElementById('end-period');
-  const deletePeriodButton = document.getElementById('delete-period');
-  const cancelMenuButton = document.getElementById('cancel-menu');
+  const menuContent = document.createElement("div");
+  menuContent.setAttribute("id", "menu-content")
+
+  const selectedDateElement = document.createElement("p");
+  selectedDateElement.textContent = `Selected Date: ${clickedDate.toLocaleDateString()}`;
+  menuContent.appendChild(selectedDateElement);
+
+  const dropdownsContent = document.createElement("div");
+  dropdownsContent.setAttribute("class", "menu-item")
+
+  const moodDropdown = document.createElement("select");
+  moodDropdown.setAttribute("class", "dropdown")
+  moodDropdown.style.fontSize = "24px";
+  moodList.forEach(mood => {
+      const moodOption = document.createElement("option");
+      moodOption.textContent = mood;
+      moodOption.value = mood;
+
+      if (selectedMoodEntry === mood) {
+        moodOption.selected = true;
+      }
+      moodDropdown.appendChild(moodOption);
+    });
+
+    moodDropdown.addEventListener("change", (event) => {
+      const selectedMood = event.target.value;
+      toggleMood(dateString, selectedMood);
+    });
+  dropdownsContent.appendChild(moodDropdown);
+
+  const flowDropdown = document.createElement("select");
+  flowDropdown.setAttribute("class", "dropdown")
+  flowDropdown.style.fontSize = "24px";
+  flowList.forEach(flow => {
+      const flowOption = document.createElement("option");
+      flowOption.textContent = flow;
+      flowOption.value = flow;
+
+      if (selectedFlowEntry === flow) {
+        flowOption.selected = true;
+      }
+      flowDropdown.appendChild(flowOption);
+    });
+
+    flowDropdown.addEventListener("change", (event) => {
+      const selectedFlow = event.target.value;
+      toggleFlow(dateString, selectedFlow);
+    });
+  flowDropdown.style.display = isWithinPeriod ? "block" : "none";
+  dropdownsContent.appendChild(flowDropdown);
+
+  menuContent.appendChild(dropdownsContent);
+
+  // Start Period Button
+  const startButtonContent = document.createElement("div");
+  startButtonContent.setAttribute("class", "menu-item")
+  const startPeriodButton = document.createElement("button");
+  startPeriodButton.textContent = "Start Period";
+  startPeriodButton.style.display = isWithinPeriod ? "none" : "block";
+  startPeriodButton.onclick = () => addPeriod(dateString);
+  startButtonContent.appendChild(startPeriodButton);
+  menuContent.appendChild(startButtonContent);
+
+  // End Period Button
+  const endButtonContent = document.createElement("div");
+  endButtonContent.setAttribute("class", "menu-item")
+  const endPeriodButton = document.createElement("button");
+  endPeriodButton.textContent = "End Period";
+  endPeriodButton.style.display = "block"
+  endPeriodButton.onclick = () => endPeriod(dateString);
+  endButtonContent.appendChild(endPeriodButton);
+  menuContent.appendChild(endButtonContent);
+
+  // Delete Period Button
+  const deleteButtonContent = document.createElement("div");
+  deleteButtonContent.setAttribute("class", "menu-item")
+  const deletePeriodButton = document.createElement("button");
+  const periodToDelete = findPeriodByDate(clickedDate);
+  deletePeriodButton.textContent = "Delete Period";
+  deletePeriodButton.style.display = periodToDelete ? "block" : "none";
+  deletePeriodButton.onclick = () => deletePeriod(periodToDelete);
+  deleteButtonContent.appendChild(deletePeriodButton);
+  menuContent.appendChild(deleteButtonContent);
+
+  // Close Button
+  const cancelButtonContent = document.createElement("div");
+  cancelButtonContent.setAttribute("class", "menu-item")
+  const cancelMenuButton = document.createElement("button");
+  cancelMenuButton.textContent = "Close";
+  cancelMenuButton.onclick = () => (menu.style.display = 'none');
+  cancelButtonContent.appendChild(cancelMenuButton);
+  menuContent.appendChild(cancelButtonContent);
+
+  menu.appendChild(menuContent);
+}
 
 
-  const selectedDateElement = document.getElementById('selected-date');
-  if (selectedDateElement) {
-    selectedDateElement.textContent = `${new Date(dateString).toLocaleDateString()}`;
-  } else {
-    console.error("selected-date element not found");
-  }
+function renderMoodSelection(selectedDate) {
+    const moodContainer = document.getElementById('mood-container');
+    moodContainer.innerHTML = '';
 
-  if (startPeriodButton) {
-    if (!isWithinPeriod) {
-      startPeriodButton.style.display = 'block';
-      startPeriodButton.onclick = () => addPeriod(dateString);
-    } else {
-      startPeriodButton.style.display = 'none';
-    }
-  } else {
-    console.error("start-period button not found");
-  }
+    moods.forEach(mood => {
+        const moodButton = document.createElement('button');
+        moodButton.textContent = mood;
+        moodButton.classList.add('mood-button');
 
-  if (endPeriodButton) {
-    endPeriodButton.style.display = 'block';
-    endPeriodButton.onclick = () => endPeriod(dateString);
-  }
+        const existingEntry = periodData.find(entry => entry.startDate === selectedDate);
+        if (existingEntry && existingEntry.moods && existingEntry.moods.includes(mood)) {
+            moodButton.classList.add('selected');
+        }
 
-  if (deletePeriodButton) {
-    const periodToDelete = findPeriodByDate(clickedDate);
-    if (periodToDelete) {
-      deletePeriodButton.style.display = 'block';
-      deletePeriodButton.onclick = () => deletePeriod(periodToDelete);
-    } else {
-      deletePeriodButton.style.display = 'none';
-    }
-  } else {
-    console.error("delete-period button not found");
-  }
+        moodButton.addEventListener('click', () => toggleMood(selectedDate, mood, moodButton));
+        moodContainer.appendChild(moodButton);
+    });
+}
 
-  if (cancelMenuButton) {
-    cancelMenuButton.onclick = () => {
-      menu.style.display = 'none';
-    };
-  } else {
-    console.error("cancel-menu button not found");
-  }
+
+function renderFlowSelection(selectedDate) {
+    const flowContainer = document.getElementById('flow-container');
+    flowContainer.innerHTML = '';
+
+    flows.forEach(flow => {
+        const flowButton = document.createElement('button');
+        flowButton.textContent = flow;
+        flowButton.classList.add('flow-button');
+
+        const existingEntry = periodData.find(entry => entry.startDate === selectedDate);
+        if (existingEntry && existingEntry.flows && existingEntry.flows.includes(flow)) {
+            moodButton.classList.add('selected');
+        }
+
+        flowButton.addEventListener('click', () => toggleFlow(selectedDate, flow, flowButton));
+        flowContainer.appendChild(flowButton);
+    });
+}
+
+
+function toggleMood(dateString, mood) {
+    moodData[dateString] = mood; // Replace existing mood for that date
+    localStorage.setItem('moodData', JSON.stringify(moodData));
+    renderCalendar();
+}
+
+
+function toggleFlow(dateString, flow) {
+    flowData[dateString] = flow; // Replace existing mood for that date
+    localStorage.setItem('flowData', JSON.stringify(flowData));
+    renderCalendar();
+}
+
+
+function getMoodsForDate(dateString) {
+    return moodData[dateString] ? [moodData[dateString]] : [];
+}
+
+function getFlowsForDate(dateString) {
+    return flowData[dateString] ? [flowData[dateString]] : [];
 }
 
 
@@ -463,9 +632,9 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     console.error("start-period button not found during DOMContentLoaded");
   }
-  
+
   renderCalendar();
-  
+
   document.getElementById("importDataBtn").addEventListener("click", () => {
     document.getElementById("importDataInput").click();
   });

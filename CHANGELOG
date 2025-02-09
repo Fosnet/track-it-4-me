@@ -1,8 +1,15 @@
 # CHANGELOG
 
+## 0.1.2 - 2025/02/09
+- Added mood and flow markers
+- Fixed daylight savings time bug
+- Updated menu layout
+- Hide menu on startup
+
 ## 0.1.1 - 2025/01/13
 - Improved predictions
 - Some formatting updates e.g. highlighting only today's date
+- External formats for imports
 
 ## 0.1.0 - 2024/12/14
 - Initial version
