@@ -679,6 +679,7 @@ function highlightEstimatedPeriod() {
 
   const today = new Date();
   const futurePredictions = [];
+  nextPredictedStartDate = null;
 
   while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
     lastStartDate = new Date(lastStartDate);
@@ -687,6 +688,10 @@ function highlightEstimatedPeriod() {
     const predictedStart = new Date(lastStartDate);
     const predictedEnd = new Date(predictedStart);
     predictedEnd.setDate(predictedStart.getDate() + averageBleedLength);
+
+    if (!nextPredictedStartDate && predictedStart > today) {
+      nextPredictedStartDate = predictedStart;
+    }
 
     futurePredictions.push({ start: predictedStart, end: predictedEnd });
   }
