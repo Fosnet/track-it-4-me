@@ -46,11 +46,11 @@ function importData(event) {
           flowData = importedData.flowData;
         }
 
-        else if (Array.isArray(importedData)) {
-          periodData = importedData;
-          moodData = {};
-          flowData = {};
-        }
+//        else if (Array.isArray(importedData)) {
+//          periodData = importedData;
+//          moodData = {};
+//          flowData = {};
+//        }
         else if (importedData.periodData) {
           periodData = importedData.periodData;
           moodData = importedData.moodData || {};
@@ -59,6 +59,13 @@ function importData(event) {
         else {
           throw new Error("Invalid JSON format");
         }
+
+//        if (!Array.isArray(importedData) && !periodData.every(entry => entry.startDate && typeof entry.length === 'number') && !periodData.length > 0) {
+        if (!periodData.every(entry => entry.startDate && typeof entry.length === 'number') && !periodData.length > 0) {
+          throw new Error("Not in native format");
+        }
+
+        console.log(periodData)
 
         localStorage.setItem('periodData', JSON.stringify(periodData));
         localStorage.setItem('moodData', JSON.stringify(moodData));
@@ -100,8 +107,6 @@ function importData(event) {
 
           }
       }
-
-
 
     };
     reader.readAsText(file);
