@@ -1,4 +1,5 @@
 let selectedDate = null;
+let nextPredictedStartDate = null;
 let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
 let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
@@ -279,6 +280,62 @@ function renderCalendar() {
   }
 
   highlightEstimatedPeriod();
+  updateCountdownMessage();
+}
+
+
+function updateCountdownMessage() {
+  const { inPeriod, daysRemaining, daysUntilNext, nextStartDate } = getPeriodStatus(nextPredictedStartDate);
+  const countdown = document.getElementById('days-remaining');
+
+  if (inPeriod) {
+    countdown.textContent = `${daysRemaining} day${daysRemaining !== 1 ? 's' : ''} remaining`;
+  } else if (daysUntilNext !== Infinity) {
+    countdown.textContent = `${daysUntilNext} day${daysUntilNext !== 1 ? 's' : ''} to go`;
+  } else {
+    countdown.textContent = `No data`;
+  }
+}
+
+
+function getPeriodStatus(predictedStart = null) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let inPeriod = false;
+  let daysRemaining = 0;
+  let nextStartDate = null;
+  let daysUntilNext = Infinity;
+
+  for (let entry of periodData) {
+    const start = new Date(entry.startDate);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + entry.length - 1);
+
+    if (today >= start && today <= end) {
+      inPeriod = true;
+      daysRemaining = Math.floor((end - today) / (1000 * 60 * 60 * 24)) + 1;
+    }
+
+    if (start > today) {
+      const diff = Math.floor((start - today) / (1000 * 60 * 60 * 24));
+      if (diff < daysUntilNext) {
+        daysUntilNext = diff;
+        nextStartDate = new Date(start);
+      }
+    }
+  }
+
+  if (!nextStartDate && predictedStart) {
+    const predicted = new Date(predictedStart);
+    predicted.setHours(0, 0, 0, 0);
+    daysUntilNext = Math.floor((predicted - today) / (1000 * 60 * 60 * 24)) + 1;
+    nextStartDate = predicted;
+  }
+
+  return { inPeriod, daysRemaining, daysUntilNext, nextStartDate };
 }
 
 
@@ -622,6 +679,9 @@ function highlightEstimatedPeriod() {
 
   const today = new Date();
   const futurePredictions = [];
+
+  nextPredictedStartDate = null;
+
   while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
     lastStartDate = new Date(lastStartDate);
     lastStartDate.setDate(lastStartDate.getDate() + averageCycleLength);
@@ -629,6 +689,10 @@ function highlightEstimatedPeriod() {
     const predictedStart = new Date(lastStartDate);
     const predictedEnd = new Date(predictedStart);
     predictedEnd.setDate(predictedStart.getDate() + averageBleedLength);
+
+    if (!nextPredictedStartDate && predictedStart > today) {
+      nextPredictedStartDate = predictedStart;
+    }
 
     futurePredictions.push({ start: predictedStart, end: predictedEnd });
   }

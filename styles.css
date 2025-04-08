@@ -102,6 +102,11 @@ body {
   background-color: pink;
 }
 
+.days-counter {
+  text-align: center;
+  margin-top: 1rem;
+}
+
 #button-bar {
   position: fixed;
   bottom: 0;
