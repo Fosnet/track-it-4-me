@@ -332,7 +332,7 @@ function getPeriodStatus(predictedStart = null) {
   if (!nextStartDate && predictedStart) {
     const predicted = new Date(predictedStart);
     predicted.setHours(0, 0, 0, 0);
-    daysUntilNext = Math.floor((predicted - today) / (1000 * 60 * 60 * 24)) + 1;
+    daysUntilNext = Math.floor((predicted - today) / (1000 * 60 * 60 * 24));
     nextStartDate = predicted;
   }
 
