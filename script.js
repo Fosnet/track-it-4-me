@@ -698,6 +698,8 @@ function highlightEstimatedPeriod() {
   }
 
   dateCells.forEach(cell => {
+    if (cell.classList.contains('empty')) return;
+
     const cellDate = new Date(
       `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent.trim()}`
     );
