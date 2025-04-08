@@ -680,8 +680,6 @@ function highlightEstimatedPeriod() {
   const today = new Date();
   const futurePredictions = [];
 
-  nextPredictedStartDate = null;
-
   while (lastStartDate < new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())) {
     lastStartDate = new Date(lastStartDate);
     lastStartDate.setDate(lastStartDate.getDate() + averageCycleLength);
@@ -690,16 +688,10 @@ function highlightEstimatedPeriod() {
     const predictedEnd = new Date(predictedStart);
     predictedEnd.setDate(predictedStart.getDate() + averageBleedLength);
 
-    if (!nextPredictedStartDate && predictedStart > today) {
-      nextPredictedStartDate = predictedStart;
-    }
-
     futurePredictions.push({ start: predictedStart, end: predictedEnd });
   }
 
   dateCells.forEach(cell => {
-    if (cell.classList.contains('empty')) return;
-
     const cellDate = new Date(
       `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent.trim()}`
     );
@@ -712,7 +704,7 @@ function highlightEstimatedPeriod() {
       if (cellDate >= start && cellDate <= end) {
         const dateString = dateToString(cellDate);
 
-        if (!isDateWithinPeriod(dateString)) {
+        if (!isDateWithinPeriod(dateString) && cellDate.getMonth() === start.getMonth()) {
           cell.classList.add('pink');
         } else {
           cell.classList.remove('pink');
