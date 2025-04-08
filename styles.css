@@ -102,17 +102,20 @@ body {
   background-color: pink;
 }
 
-.open-info-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    cursor: pointer;
+#button-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 5px 5px;
+  display: flex;
+  justify-content: space-between;
+  z-index: 100;
 }
-.open-info-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    cursor: pointer;
+
+.left-buttons button,
+.right-buttons button {
+  margin-right: 10px;
 }
 
 .overlay {
