@@ -8,6 +8,8 @@
 - Fix issues with DST
 - Fix issues with native import giving false errors
 - Remove support for legacy native format
+- Make text bigger
+- Make buttons bigger and add more space around buttons
 
 ## 0.1.2 - 2025/02/09
 - Added mood and flow markers
