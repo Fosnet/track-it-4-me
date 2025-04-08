@@ -64,10 +64,6 @@ function importData(event) {
         localStorage.setItem('moodData', JSON.stringify(moodData));
         localStorage.setItem('flowData', JSON.stringify(flowData));
 
-       if (!Array.isArray(parsedData) || !parsedData.every(entry => entry.startDate && typeof entry.length === 'number')) {
-                throw new Error("Not in native format");
-            }
-
         alert("Data imported successfully!");
         renderCalendar();
       } catch (error) {

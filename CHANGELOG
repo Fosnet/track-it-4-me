@@ -6,6 +6,7 @@
 - Add counter with days remaining/to go
 - Stop predicted days appearing in the previous month on the calendar
 - Fix issues with DST
+- Fix issues with native import giving false errors
 
 ## 0.1.2 - 2025/02/09
 - Added mood and flow markers
