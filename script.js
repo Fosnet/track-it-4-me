@@ -687,7 +687,7 @@ function highlightEstimatedPeriod() {
 
     const predictedStart = new Date(lastStartDate);
     const predictedEnd = new Date(predictedStart);
-    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength);
+    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength - 1);
 
     if (!nextPredictedStartDate && predictedStart > today) {
       nextPredictedStartDate = predictedStart;
