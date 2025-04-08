@@ -5,6 +5,7 @@
 - Move buttons to bottom of screen
 - Add counter with days remaining/to go
 - Stop predicted days appearing in the previous month on the calendar
+- Fix issues with DST
 
 ## 0.1.2 - 2025/02/09
 - Added mood and flow markers

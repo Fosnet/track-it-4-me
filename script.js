@@ -687,7 +687,7 @@ function highlightEstimatedPeriod() {
 
     const predictedStart = new Date(lastStartDate);
     const predictedEnd = new Date(predictedStart);
-    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength - 1);
+    predictedEnd.setDate(predictedStart.getDate() + averageBleedLength);
 
     if (!nextPredictedStartDate && predictedStart > today) {
       nextPredictedStartDate = predictedStart;
@@ -701,15 +701,20 @@ function highlightEstimatedPeriod() {
       `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}-${cell.textContent.trim()}`
     );
 
+    const startOfDay = new Date(cellDate.setHours(0, 0, 0, 0));
+
     if (isNaN(cellDate)) return;
 
     let isPredicted = false;
 
     for (const { start, end } of futurePredictions) {
-      if (cellDate >= start && cellDate <= end) {
+      const predictedStartDate = new Date(start.setHours(0, 0, 0, 0));
+      const predictedEndDate = new Date(end.setHours(0, 0, 0, 0));
+
+      if (startOfDay >= predictedStartDate && startOfDay < predictedEndDate) {
         const dateString = dateToString(cellDate);
 
-        if (!isDateWithinPeriod(dateString) && cellDate.getMonth() === start.getMonth()) {
+         if (!isDateWithinPeriod(dateString) && startOfDay.getMonth() === predictedStartDate.getMonth()) {
           cell.classList.add('pink');
         } else {
           cell.classList.remove('pink');
