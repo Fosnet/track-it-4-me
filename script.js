@@ -294,7 +294,7 @@ function updateCountdownMessage() {
   } else if (daysUntilNext !== Infinity) {
     countdown.textContent = `${daysUntilNext} day${daysUntilNext !== 1 ? 's' : ''} to go`;
   } else {
-    countdown.textContent = `No data`;
+    countdown.textContent = ``;
   }
 }
 
