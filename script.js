@@ -987,14 +987,24 @@ document.getElementById("closeConfigMenuBtn").addEventListener("click", function
 });
 document.getElementById("flow-colour").addEventListener("input", function(event) {
     document.documentElement.style.setProperty('--flow-colour', event.target.value);
-    configData.flowColour = event.target.value;
+    if (isValidHex(event.target.value)) {
+        configData.flowColour = event.target.value;
+    } else {
+        configData.flowColour = '#922B21';
+    }
+    document.documentElement.style.setProperty('--flow-colour', configData.flowColour);
     adjustTextColor();
     renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
 });
 document.getElementById("prediction-colour").addEventListener("input", function(event) {
     document.documentElement.style.setProperty('--prediction-colour', event.target.value);
-    configData.predictionColour = event.target.value;
+    if (isValidHex(event.target.value)) {
+        configData.predictionColour = event.target.value;
+    } else {
+        configData.predictionColour = '#D98880';
+    }
+    document.documentElement.style.setProperty('--prediction-colour', configData.predictionColour);
     adjustTextColor();
     renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
@@ -1042,8 +1052,8 @@ function getBrightness(colour) {
 }
 
 function adjustTextColor() {
-  const flowColour = document.getElementById("flow-colour").value;
-  const predictionColour = document.getElementById("prediction-colour").value;
+  const flowColour = configData.flowColour;
+  const predictionColour = configData.predictionColour;
 
   const flowBrightness = getBrightness(flowColour);
   const predictionBrightness = getBrightness(predictionColour);
