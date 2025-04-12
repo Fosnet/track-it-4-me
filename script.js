@@ -4,7 +4,7 @@ let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
 let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
 let notesData = JSON.parse(localStorage.getItem('notesData')) || {};
-let configData = JSON.parse(localStorage.getItem('configData')) || {flowColour: "#922B21", predictionColour: "#D98880"};
+let configData = JSON.parse(localStorage.getItem('configData')) || {flowColour: "#922B21", predictionColour: "#D98880", disablePredictions: false};
 
 const moodList = [
   " ", "auto", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
@@ -219,6 +219,7 @@ function deleteAllData() {
     moodData = {};
     flowData = {};
     notesData = {};
+    configData = {};
     localStorage.removeItem('periodData');
     localStorage.removeItem('moodData');
     localStorage.removeItem('flowData');
@@ -339,7 +340,9 @@ function renderCalendar() {
     calendar.appendChild(dateCell);
   }
 
-  highlightEstimatedPeriod();
+  if (!configData.disablePredictions) {
+      highlightEstimatedPeriod();
+  }
   updateCountdownMessage();
 }
 
@@ -984,6 +987,9 @@ document.getElementById("openConfigBtn").addEventListener("click", function() {
     predictionColourInput.style.backgroundColor = configData.predictionColour || '#D98880';
     predictionColourInput.value = configData.predictionColour;
 
+    const predictionCheckbox = document.getElementById('prediction-checkbox');
+    predictionCheckbox.checked = configData.disablePredictions;
+
     adjustTextColor();
 });
 document.getElementById("closeConfigMenuBtn").addEventListener("click", function() {
@@ -1010,6 +1016,11 @@ document.getElementById("prediction-colour").addEventListener("input", function(
     }
     document.documentElement.style.setProperty('--prediction-colour', configData.predictionColour);
     adjustTextColor();
+    renderCalendar();
+    localStorage.setItem('configData', JSON.stringify(configData));
+});
+document.getElementById("prediction-checkbox").addEventListener("input", function(event) {
+    configData.disablePredictions = event.target.checked;
     renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
 });
