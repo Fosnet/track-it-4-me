@@ -309,6 +309,10 @@ function renderCalendar() {
     if (isDateWithinPeriod(dateString)) {
       flows = getFlowsForDate(dateString);
       dateCell.classList.add('red');
+
+      const flowBrightness = getBrightness(configData.flowColour);
+      const textColour = flowBrightness < 0.5 ? "#ffffff" : "#000000";
+      dayNumber.style.color = textColour;
     }
     emojiContainer.textContent = (mood || "") + (flows || "") || "\xa0";
 
@@ -972,6 +976,11 @@ function applyPreferences() {
 
 document.getElementById("openConfigBtn").addEventListener("click", function() {
     document.getElementById("configMenu").style.display = "flex";
+    const flowColourInput = document.getElementById('flow-colour');
+    flowColourInput.style.backgroundColor = configData.flowColour || '#922B21';
+    const predictionColourInput = document.getElementById('prediction-colour');
+    predictionColourInput.style.backgroundColor = configData.predictionColour || '#D98880';
+    adjustTextColor();
 });
 document.getElementById("closeConfigMenuBtn").addEventListener("click", function() {
     document.getElementById("configMenu").style.display = "none";
@@ -979,11 +988,15 @@ document.getElementById("closeConfigMenuBtn").addEventListener("click", function
 document.getElementById("flow-colour").addEventListener("input", function(event) {
     document.documentElement.style.setProperty('--flow-colour', event.target.value);
     configData.flowColour = event.target.value;
+    adjustTextColor();
+    renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
 });
 document.getElementById("prediction-colour").addEventListener("input", function(event) {
     document.documentElement.style.setProperty('--prediction-colour', event.target.value);
     configData.predictionColour = event.target.value;
+    adjustTextColor();
+    renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
 });
 
@@ -993,6 +1006,74 @@ document.getElementById("openInfoBtn").addEventListener("click", function() {
 
 document.getElementById("closeOverlayBtn").addEventListener("click", function() {
     document.getElementById("infoPopUp").style.display = "none";
+});
+
+
+function isValidHex(color) {
+    return /^#([0-9A-Fa-f]{3}){1,2}$/.test(color);
+}
+
+function hexToRgb(hex) {
+  hex = hex.replace('#', '');
+
+  if (hex.length === 3) {
+    hex = hex.split('').map(function(c) {
+      return c + c;
+    }).join('');
+  }
+
+  const r = parseInt(hex.substr(0, 2), 16);
+  const g = parseInt(hex.substr(2, 2), 16);
+  const b = parseInt(hex.substr(4, 2), 16);
+
+  return { r, g, b };
+}
+
+function getBrightness(colour) {
+  const { r, g, b } = hexToRgb(colour);
+
+  const rNorm = r / 255;
+  const gNorm = g / 255;
+  const bNorm = b / 255;
+
+  const luminance = 0.2126 * rNorm + 0.7152 * gNorm + 0.0722 * bNorm;
+
+  return luminance;
+}
+
+function adjustTextColor() {
+  const flowColour = document.getElementById("flow-colour").value;
+  const predictionColour = document.getElementById("prediction-colour").value;
+
+  const flowBrightness = getBrightness(flowColour);
+  const predictionBrightness = getBrightness(predictionColour);
+
+  const flowTextColour = flowBrightness < 0.5 ? "#ffffff" : "#000000";
+  const predictionTextColour = predictionBrightness < 0.5 ? "#ffffff" : "#000000";
+
+  document.getElementById("flow-colour").style.color = flowTextColour;
+  document.getElementById("prediction-colour").style.color = predictionTextColour;
+}
+
+const flowColourInput = document.getElementById('flow-colour');
+flowColourInput.addEventListener('input', function() {
+    const colour = flowColourInput.value;
+    if (isValidHex(colour)) {
+       flowColourInput.style.backgroundColor = colour;
+    } else {
+        flowColourInput.style.backgroundColor = "#922B21";
+    }
+    adjustTextColor();
+});
+const predictionColourInput = document.getElementById('prediction-colour');
+predictionColourInput.addEventListener('input', function() {
+    const colour = predictionColourInput.value;
+    if (isValidHex(colour)) {
+        predictionColourInput.style.backgroundColor = colour;
+    } else {
+        predictionColourInput.style.backgroundColor = '#D98880';
+    }
+    adjustTextColor();
 });
 
 document.addEventListener('DOMContentLoaded', () => {

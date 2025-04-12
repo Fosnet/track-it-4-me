@@ -55,10 +55,17 @@
             <p>
 			<h2>User Preferences</h2>
 
-			<label for="flow-colour">Flow:</label>
-			<input type="color" id="flow-colour" name="flow-colour" value="#ff4d4d">
-			<label for="prediction-colour">Prediction:</label>
-			<input type="color" id="prediction-colour" name="prediction-colour" value="#00ffff">
+			<div class="preferences-container">
+				<div class="preference-item">
+					<label for="flow-colour">Flow:</label>
+					<input type="text" id="flow-colour" name="flow-colour" value="#922B21">
+				</div>
+
+				<div class="preference-item">
+					<label for="prediction-colour">Prediction:</label>
+					<input type="text" id="prediction-colour" name="prediction-colour" value="#D98880">
+				</div>
+       		</div>
 
             <button id="closeConfigMenuBtn" class="close-overlay-btn">Close</button>
         </div>

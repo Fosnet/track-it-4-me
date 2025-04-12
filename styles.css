@@ -214,3 +214,30 @@ body {
 .mood-cell select {
     width: 100%;
 }
+
+#configMenu .overlay-content .preferences-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+#configMenu .overlay-content .preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#configMenu .overlay-content label {
+    font-size: 16px;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+#configMenu .overlay-content input[type="text"] {
+    width: 120px;
+    height: 30px;
+    font-size: 16px;
+    text-align: center;
+    border: 1px solid #ccc;
+}
