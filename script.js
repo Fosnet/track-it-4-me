@@ -4,6 +4,7 @@ let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
 let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
 let notesData = JSON.parse(localStorage.getItem('notesData')) || {};
+let configData = JSON.parse(localStorage.getItem('configData')) || {flowColour: "#922B21", predictionColour: "#D98880"};
 
 const moodList = [
   " ", "auto", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
@@ -17,7 +18,8 @@ function exportData() {
     periodData,
     moodData,
     flowData,
-    notesData
+    notesData,
+    configData
   };
 
   const dataStr = JSON.stringify(data, null, 2);
@@ -42,11 +44,12 @@ function importData(event) {
       try {
         const importedData = JSON.parse(e.target.result);
 
-        if (importedData.periodData && importedData.moodData && importedData.flowData && importedData.notesData) {
+        if (importedData.periodData && importedData.moodData && importedData.flowData && importedData.notesData & importData.configData) {
           periodData = importedData.periodData;
           moodData = importedData.moodData;
           flowData = importedData.flowData;
           notesData = importedData.notesData;
+          configData = importedData.configData;
         }
 
 //        else if (Array.isArray(importedData)) {
@@ -56,9 +59,10 @@ function importData(event) {
 //        }
         else if (importedData.periodData) {
           periodData = importedData.periodData;
-          moodData = importedData.moodData || {};
-          flowData = importedData.flowData || {};
-          notesData = importedData.notesData || {};
+          moodData = importedData.moodData || moodData;
+          flowData = importedData.flowData || flowData;
+          notesData = importedData.notesData || notesData;
+          configData = importedData.configData || configData;
         }
         else {
           throw new Error("Invalid JSON format");
@@ -75,6 +79,7 @@ function importData(event) {
         localStorage.setItem('moodData', JSON.stringify(moodData));
         localStorage.setItem('flowData', JSON.stringify(flowData));
         localStorage.setItem('notesData', JSON.stringify(notesData));
+        localStorage.setItem('configData', JSON.stringify(configData));
 
         alert("Data imported successfully!");
         renderCalendar();
@@ -84,11 +89,19 @@ function importData(event) {
             const customFormatData = parseMyCalendarAndroid(e.target.result);
             if (customFormatData.length > 0) {
               periodData = customFormatData;
-              moodData = {};
-              flowData = {};
-              notesData = {};
+              moodData = moodData;
+              flowData = flowData;
+              notesData = notesData;
+              configData = configData;
               localStorage.setItem('periodData', JSON.stringify(periodData));
               alert("Data imported successfully!");
+
+              localStorage.setItem('periodData', JSON.stringify(periodData));
+              localStorage.setItem('moodData', JSON.stringify(moodData));
+              localStorage.setItem('flowData', JSON.stringify(flowData));
+              localStorage.setItem('notesData', JSON.stringify(notesData));
+              localStorage.setItem('configData', JSON.stringify(configData));
+
               renderCalendar();
             } else {
               throw new Error("No valid data found in MyCalendar format");
@@ -98,11 +111,19 @@ function importData(event) {
                 const customFormatData = parseClueAndroid(e.target.result);
                 if (customFormatData.length > 0) {
                   periodData = customFormatData;
-                  moodData = {};
-                  flowData = {};
-                  notesData = {};
+                  moodData = moodData;
+                  flowData = flowData;
+                  notesData = notesData;
+                  configData = configData;
                   localStorage.setItem('periodData', JSON.stringify(periodData));
                   alert("Data imported successfully!");
+
+                  localStorage.setItem('periodData', JSON.stringify(periodData));
+                  localStorage.setItem('moodData', JSON.stringify(moodData));
+                  localStorage.setItem('flowData', JSON.stringify(flowData));
+                  localStorage.setItem('notesData', JSON.stringify(notesData));
+                  localStorage.setItem('configData', JSON.stringify(configData));
+
                   renderCalendar();
                 } else {
                   throw new Error("No valid data found in Clue format");
@@ -202,6 +223,7 @@ function deleteAllData() {
     localStorage.removeItem('moodData');
     localStorage.removeItem('flowData');
     localStorage.removeItem('notesData');
+    localStorage.removeItem('configData');
     alert("All data has been deleted.");
     renderCalendar();
   }
@@ -214,8 +236,9 @@ function dateToString(date) {
                    String(date.getDate()).padStart(2, '0');
 }
 
-
+// Things to run on first load
 upgradeMoodData();
+applyPreferences();
 
 function upgradeMoodData() {
   for (const date in moodData) {
@@ -231,12 +254,6 @@ function upgradeMoodData() {
   localStorage.setItem('moodData', JSON.stringify(moodData))
 }
 
-
-document.getElementById("deleteDataBtn").addEventListener("click", deleteAllData);
-
-document.querySelectorAll('.date-cell').forEach(cell => {
-  cell.addEventListener('click', onDateCellClick);
-});
 
 const calendar = document.getElementById('calendar');
 const monthDisplay = document.getElementById('month-display');
@@ -515,6 +532,7 @@ function openMenu(dateString) {
   notesTextBox.addEventListener("input", () => {
       notesData[dateString] = notesTextBox.value;
       localStorage.setItem("notesData", JSON.stringify(notesData));
+      renderCalendar();
     });
   notesContent.appendChild(notesTextBox);
   menuContent.appendChild(notesContent);
@@ -938,13 +956,43 @@ function highlightEstimatedPeriod() {
   });
 }
 
+function applyPreferences() {
+  document.documentElement.style.setProperty('--flow-colour', configData.flowColour);
+  const flowColourInput = document.getElementById('flow-colour');
+  if (flowColourInput) {
+    flowColourInput.value = configData.flowColour;
+  }
+  document.documentElement.style.setProperty('--prediction-colour', configData.predictionColour);
+  const predictionColourInput = document.getElementById('prediction-colour');
+  if (predictionColourInput) {
+    predictionColourInput.value = configData.predictionColour;
+  }
+  localStorage.setItem('configData', JSON.stringify(configData));
+}
+
+document.getElementById("openConfigBtn").addEventListener("click", function() {
+    document.getElementById("configMenu").style.display = "flex";
+});
+document.getElementById("closeConfigMenuBtn").addEventListener("click", function() {
+    document.getElementById("configMenu").style.display = "none";
+});
+document.getElementById("flow-colour").addEventListener("input", function(event) {
+    document.documentElement.style.setProperty('--flow-colour', event.target.value);
+    configData.flowColour = event.target.value;
+    localStorage.setItem('configData', JSON.stringify(configData));
+});
+document.getElementById("prediction-colour").addEventListener("input", function(event) {
+    document.documentElement.style.setProperty('--prediction-colour', event.target.value);
+    configData.predictionColour = event.target.value;
+    localStorage.setItem('configData', JSON.stringify(configData));
+});
 
 document.getElementById("openInfoBtn").addEventListener("click", function() {
-    document.getElementById("overlay").style.display = "flex";
+    document.getElementById("infoPopUp").style.display = "flex";
 });
 
 document.getElementById("closeOverlayBtn").addEventListener("click", function() {
-    document.getElementById("overlay").style.display = "none";
+    document.getElementById("infoPopUp").style.display = "none";
 });
 
 document.addEventListener('DOMContentLoaded', () => {

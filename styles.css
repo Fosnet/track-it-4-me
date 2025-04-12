@@ -5,6 +5,11 @@ body {
   font-family: sans-serif;
 }
 
+:root {
+  --flow-colour: #922B21;
+  --prediction-colour: #D98880;
+}
+
 #menu {
   position: absolute;
   border: 1px solid #ccc;
@@ -81,11 +86,11 @@ body {
 }
 
 .date-cell.red {
-  background-color: #922B21 ;
+  background-color: var(--flow-colour);
 }
 
 .date-cell.pink {
-  background-color: #D98880 ;
+  background-color:var(--prediction-colour);
 }
 
 .date-cell.today {
@@ -149,10 +154,8 @@ body {
   margin-right: 10px;
 }
 
-
 #notes {
     width: 100%;
-
 }
 
 .overlay {

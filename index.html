@@ -35,11 +35,12 @@
 		</div>
 
 		<div class="right-buttons">
+			<button id="openConfigBtn" class="open-config-btn">⚙️</button>
 			<button id="openInfoBtn" class="open-info-btn">?</button>
 		</div>
 	</div>
 
-    <div id="overlay" class="overlay">
+    <div id="infoPopUp" class="overlay">
         <div class="overlay-content">
             <p>
 			This is a lightweight period tracker intended for use on any device that has a web browser. Data is stored on your device only and never on any servers - you own and control your data and always will.
@@ -49,16 +50,27 @@
         </div>
     </div>
 
+    <div id="configMenu" class="overlay">
+        <div class="overlay-content">
+            <p>
+			<h2>User Preferences</h2>
+
+			<label for="flow-colour">Flow:</label>
+			<input type="color" id="flow-colour" name="flow-colour" value="#ff4d4d">
+			<label for="prediction-colour">Prediction:</label>
+			<input type="color" id="prediction-colour" name="prediction-colour" value="#00ffff">
+
+            <button id="closeConfigMenuBtn" class="close-overlay-btn">Close</button>
+        </div>
+    </div>
+
     <script>
     </script>
 
 
 
   <script src="script.js"></script>
-  
-  
+
 </body>
 </html>
-
-
 
