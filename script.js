@@ -3,6 +3,7 @@ let nextPredictedStartDate = null;
 let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
 let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
+let notesData = JSON.parse(localStorage.getItem('notesData')) || {};
 
 const moodList = [
   " ", "auto", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
@@ -15,7 +16,8 @@ function exportData() {
   const data = {
     periodData,
     moodData,
-    flowData
+    flowData,
+    notesData
   };
 
   const dataStr = JSON.stringify(data, null, 2);
@@ -40,10 +42,11 @@ function importData(event) {
       try {
         const importedData = JSON.parse(e.target.result);
 
-        if (importedData.periodData && importedData.moodData && importedData.flowData) {
+        if (importedData.periodData && importedData.moodData && importedData.flowData && importedData.notesData) {
           periodData = importedData.periodData;
           moodData = importedData.moodData;
           flowData = importedData.flowData;
+          notesData = importedData.notesData;
         }
 
 //        else if (Array.isArray(importedData)) {
@@ -55,6 +58,7 @@ function importData(event) {
           periodData = importedData.periodData;
           moodData = importedData.moodData || {};
           flowData = importedData.flowData || {};
+          notesData = importedData.notesData || {};
         }
         else {
           throw new Error("Invalid JSON format");
@@ -70,6 +74,7 @@ function importData(event) {
         localStorage.setItem('periodData', JSON.stringify(periodData));
         localStorage.setItem('moodData', JSON.stringify(moodData));
         localStorage.setItem('flowData', JSON.stringify(flowData));
+        localStorage.setItem('notesData', JSON.stringify(notesData));
 
         alert("Data imported successfully!");
         renderCalendar();
@@ -81,6 +86,7 @@ function importData(event) {
               periodData = customFormatData;
               moodData = {};
               flowData = {};
+              notesData = {};
               localStorage.setItem('periodData', JSON.stringify(periodData));
               alert("Data imported successfully!");
               renderCalendar();
@@ -94,6 +100,7 @@ function importData(event) {
                   periodData = customFormatData;
                   moodData = {};
                   flowData = {};
+                  notesData = {};
                   localStorage.setItem('periodData', JSON.stringify(periodData));
                   alert("Data imported successfully!");
                   renderCalendar();
@@ -190,9 +197,11 @@ function deleteAllData() {
     periodData = [];
     moodData = {};
     flowData = {};
+    notesData = {};
     localStorage.removeItem('periodData');
     localStorage.removeItem('moodData');
     localStorage.removeItem('flowData');
+    localStorage.removeItem('notesData');
     alert("All data has been deleted.");
     renderCalendar();
   }
@@ -285,6 +294,14 @@ function renderCalendar() {
       dateCell.classList.add('red');
     }
     emojiContainer.textContent = (mood || "") + (flows || "") || "\xa0";
+
+    if (notesData[dateString]?.trim()) {
+      dateCell.classList.add("has-note");
+      dateCell.title = notesData[dateString];
+    } else {
+      dateCell.classList.remove("has-note");
+      dateCell.removeAttribute("title");
+    }
 
     dateCell.appendChild(dayNumber);
     dateCell.appendChild(emojiContainer);
@@ -486,6 +503,21 @@ function openMenu(dateString) {
   moodChooserContent.setAttribute("class", "menu-item")
   moodChooserContent.setAttribute("id", "mood-container")
   menuContent.appendChild(moodChooserContent);
+
+  // Notes
+  const notesContent = document.createElement("div");
+  notesContent.setAttribute("class", "menu-item")
+  notesContent.setAttribute("id", "notes")
+  const notesTextBox = document.createElement("textarea");
+  notesTextBox.setAttribute("id", "notes")
+  notesTextBox.setAttribute("placeholder", "Enter note here")
+  notesTextBox.value = notesData[dateString] || "";
+  notesTextBox.addEventListener("input", () => {
+      notesData[dateString] = notesTextBox.value;
+      localStorage.setItem("notesData", JSON.stringify(notesData));
+    });
+  notesContent.appendChild(notesTextBox);
+  menuContent.appendChild(notesContent);
 
   // Close Button
   const cancelButtonContent = document.createElement("div");

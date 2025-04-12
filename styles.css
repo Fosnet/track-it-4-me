@@ -63,6 +63,7 @@ body {
   justify-content: center;
   text-align: center;
   padding: 5px;
+  position: relative;
 }
 
 .day-header {
@@ -90,6 +91,17 @@ body {
 .date-cell.today {
   border: 2px solid #fff;
   font-weight: bold;
+}
+
+.date-cell.has-note::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 10px;
+  height: 10px;
+  background: white;
+  clip-path: polygon(100% 0, 0 0, 100% 100%);
 }
 
 .modal {
@@ -135,6 +147,12 @@ body {
 .left-buttons button,
 .right-buttons button {
   margin-right: 10px;
+}
+
+
+#notes {
+    width: 100%;
+
 }
 
 .overlay {
