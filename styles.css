@@ -11,6 +11,10 @@ body {
   padding: 10px;
   z-index: 1000;
   display: table-cell;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 80vh;
+  box-sizing: border-box;
 }
 
 #menu-content {
@@ -164,4 +168,28 @@ body {
     left: 50%;
     transform: translateX(-50%);
     cursor: pointer;
+}
+
+.hourly-mood-container {
+    padding-right: 10px;
+}
+
+.columns-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.column {
+    flex: 1;
+    max-height: 100%;
+}
+
+.row {
+    display: flex;
+    align-items: center;
+}
+
+.mood-cell select {
+    width: 100%;
 }

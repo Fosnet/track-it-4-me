@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.1.4 - 2025/04/12
+- Added ability to track moods hourly
+
 ## 0.1.3 - 2025/04/08
 - Fixed prediction dates being one day short
 - Move buttons to bottom of screen

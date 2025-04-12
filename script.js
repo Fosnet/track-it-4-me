@@ -5,7 +5,7 @@ let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
 
 const moodList = [
-  " ", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
+  " ", "auto", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
 ];
 const flowList = [
   " ", "💧", "💦", "🌊"
@@ -111,6 +111,7 @@ function importData(event) {
     };
     reader.readAsText(file);
   }
+  location.reload();
 }
 
 
@@ -205,6 +206,23 @@ function dateToString(date) {
 }
 
 
+upgradeMoodData();
+
+function upgradeMoodData() {
+  for (const date in moodData) {
+    const value = moodData[date];
+
+    if (typeof value === 'string') {
+      moodData[date] = {
+        mood: value,
+        hourly: {}
+      };
+    }
+  }
+  localStorage.setItem('moodData', JSON.stringify(moodData))
+}
+
+
 document.getElementById("deleteDataBtn").addEventListener("click", deleteAllData);
 
 document.querySelectorAll('.date-cell').forEach(cell => {
@@ -250,20 +268,23 @@ function renderCalendar() {
     dateCell.classList.add('date-cell');
 
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateString = dateToString(date)
+    const dateString = dateToString(date);
+
+    dateCell.setAttribute('data-date', dateString);
 
     const dayNumber = document.createElement('div');
     dayNumber.textContent = day;
     dayNumber.classList.add('day-number');
 
     const emojiContainer = document.createElement('div');
-    const moods = getMoodsForDate(dateString);
+    const mood = getAverageMoodForDate(dateString);
+
     let flows = [];
     if (isDateWithinPeriod(dateString)) {
       flows = getFlowsForDate(dateString);
       dateCell.classList.add('red');
     }
-    emojiContainer.textContent = moods.join(" ") + flows.join(" ") || "\xa0";
+    emojiContainer.textContent = (mood || "") + (flows || "") || "\xa0";
 
     dateCell.appendChild(dayNumber);
     dateCell.appendChild(emojiContainer);
@@ -363,7 +384,7 @@ function openMenu(dateString) {
     console.error("Menu element not found!");
     return;
   }
-  menu.innerHTML = ''; // Clear previous content
+  menu.innerHTML = '';
 
   const selectedPeriodEntry = periodData.find(entry => entry.startDate === dateString);
 
@@ -380,7 +401,7 @@ function openMenu(dateString) {
   menuContent.setAttribute("id", "menu-content")
 
   const selectedDateElement = document.createElement("p");
-  selectedDateElement.textContent = `Selected Date: ${clickedDate.toLocaleDateString()}`;
+  selectedDateElement.textContent = `${clickedDate.toLocaleDateString()}`;
   menuContent.appendChild(selectedDateElement);
 
   const dropdownsContent = document.createElement("div");
@@ -394,7 +415,7 @@ function openMenu(dateString) {
       moodOption.textContent = mood;
       moodOption.value = mood;
 
-      if (selectedMoodEntry === mood) {
+      if (selectedMoodEntry?.mood === mood) {
         moodOption.selected = true;
       }
       moodDropdown.appendChild(moodOption);
@@ -460,6 +481,12 @@ function openMenu(dateString) {
   deleteButtonContent.appendChild(deletePeriodButton);
   menuContent.appendChild(deleteButtonContent);
 
+  // Mood chooser
+  const moodChooserContent = document.createElement("div");
+  moodChooserContent.setAttribute("class", "menu-item")
+  moodChooserContent.setAttribute("id", "mood-container")
+  menuContent.appendChild(moodChooserContent);
+
   // Close Button
   const cancelButtonContent = document.createElement("div");
   cancelButtonContent.setAttribute("class", "menu-item")
@@ -470,6 +497,7 @@ function openMenu(dateString) {
   menuContent.appendChild(cancelButtonContent);
 
   menu.appendChild(menuContent);
+  renderMoodSelection(dateString);
 }
 
 
@@ -477,19 +505,115 @@ function renderMoodSelection(selectedDate) {
     const moodContainer = document.getElementById('mood-container');
     moodContainer.innerHTML = '';
 
-    moods.forEach(mood => {
-        const moodButton = document.createElement('button');
-        moodButton.textContent = mood;
-        moodButton.classList.add('mood-button');
+    const isAutoSelected = moodData[selectedDate]?.mood === "auto";
 
-        const existingEntry = periodData.find(entry => entry.startDate === selectedDate);
-        if (existingEntry && existingEntry.moods && existingEntry.moods.includes(mood)) {
-            moodButton.classList.add('selected');
-        }
+    if (isAutoSelected) {
+        const times = Array.from({ length: 24 }, (_, i) => i < 10 ? '0' + i : i.toString());
+        const hourlyContainer = document.createElement('div');
+        hourlyContainer.classList.add('hourly-mood-container');
 
-        moodButton.addEventListener('click', () => toggleMood(selectedDate, mood, moodButton));
-        moodContainer.appendChild(moodButton);
+        const columnsContainer = document.createElement('div');
+        columnsContainer.classList.add('columns-container');
+
+        const firstColumn = document.createElement('div');
+        firstColumn.classList.add('column');
+        const secondColumn = document.createElement('div');
+        secondColumn.classList.add('column');
+
+        const firstColumnTimes = times.slice(0, 12);
+        firstColumnTimes.forEach(time => {
+            const row = createMoodRow(time, selectedDate);
+            firstColumn.appendChild(row);
+        });
+
+        const secondColumnTimes = times.slice(12);
+        secondColumnTimes.forEach(time => {
+            const row = createMoodRow(time, selectedDate);
+            secondColumn.appendChild(row);
+        });
+
+        columnsContainer.appendChild(firstColumn);
+        columnsContainer.appendChild(secondColumn);
+
+        hourlyContainer.appendChild(columnsContainer);
+        moodContainer.appendChild(hourlyContainer);
+
+    }
+}
+
+
+function createMoodRow(time, selectedDate) {
+    const row = document.createElement('div');
+    row.classList.add('row');
+
+    const timeCell = document.createElement('span');
+    timeCell.classList.add('time-cell');
+    timeCell.textContent = `${time}:00`;
+
+    const select = document.createElement('select');
+    moodList.filter(m => m !== "auto").forEach(mood => {
+        const option = document.createElement('option');
+        option.value = mood;
+        option.textContent = mood;
+        select.appendChild(option);
     });
+
+    const existingMood = moodData[selectedDate]?.hourly?.[time.toLowerCase()];
+    if (existingMood) {
+        select.value = existingMood;
+    }
+
+    select.addEventListener('change', () => {
+        updateHourlyMood(selectedDate, time.toLowerCase(), select.value);
+    });
+
+    const moodCell = document.createElement('span');
+    moodCell.classList.add('mood-cell');
+    moodCell.appendChild(select);
+
+    row.appendChild(timeCell);
+    row.appendChild(moodCell);
+
+    return row;
+}
+
+
+function updateHourlyMood(dateString, time, mood) {
+  if (!dateString) {
+    console.error("Invalid dateString:", dateString);
+    return;
+  }
+
+  if (!moodData[dateString]) {
+    moodData[dateString] = { hourly: {} };
+  }
+
+  moodData[dateString].hourly[time] = mood;
+  localStorage.setItem('moodData', JSON.stringify(moodData));
+
+  renderMoodSelection(dateString);
+  updateOverallMood(dateString);
+  renderCalendar();
+}
+
+
+function updateOverallMood(dateString) {
+  const hourlyMoods = moodData[dateString]?.hourly || {};
+
+  const moodCount = {};
+  Object.values(hourlyMoods).forEach(mood => {
+    moodCount[mood] = (moodCount[mood] || 0) + 1;
+  });
+
+  const mostFrequentMood = Object.keys(moodCount).reduce((a, b) => moodCount[a] > moodCount[b] ? a : b, '🙂');
+
+  const dateCell = document.querySelector(`.date-cell[data-date="${dateString}"]`);
+  if (dateCell) {
+    const emojiContainer = dateCell.querySelector('.emoji-container');
+    if (emojiContainer) {
+      emojiContainer.textContent = mostFrequentMood;
+    }
+  }
 }
 
 
@@ -513,23 +637,74 @@ function renderFlowSelection(selectedDate) {
 }
 
 
-function toggleMood(dateString, mood) {
-    moodData[dateString] = mood; // Replace existing mood for that date
+function toggleMood(dateString, mood, buttonElement) {
+    const isExistingData = moodData[dateString];
+
+    if (mood === "auto") {
+        moodData[dateString] = {
+            mood: "auto",
+            hourly: moodData[dateString]?.hourly || {}
+        };
+    } else {
+        moodData[dateString] = {
+            mood: mood,
+            hourly: moodData[dateString]?.hourly || {}
+        };
+    }
+
     localStorage.setItem('moodData', JSON.stringify(moodData));
+
     renderCalendar();
+    renderMoodSelection(dateString);
 }
 
 
 function toggleFlow(dateString, flow) {
-    flowData[dateString] = flow; // Replace existing mood for that date
+    flowData[dateString] = flow;
     localStorage.setItem('flowData', JSON.stringify(flowData));
     renderCalendar();
 }
 
 
 function getMoodsForDate(dateString) {
-    return moodData[dateString] ? [moodData[dateString]] : [];
+  const entry = moodData[dateString];
+
+  if (!entry) return [];
+
+  if (entry.mood === "auto" && entry.hourly) {
+    return getAverageMoodForDate(dateString);
+  }
+
+  return entry.mood ? [entry.mood] : [];
 }
+
+
+function getAverageMoodForDate(dateString) {
+  const entry = moodData[dateString];
+
+  if (!entry) return null;
+
+  if (entry.mood === "auto" && entry.hourly) {
+    const moodCounts = {};
+    Object.values(entry.hourly).forEach(mood => {
+      moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+    });
+
+    let maxMood = null;
+    let maxCount = 0;
+    for (const mood in moodCounts) {
+      if (moodCounts[mood] > maxCount) {
+        maxMood = mood;
+        maxCount = moodCounts[mood];
+      }
+    }
+
+    return maxMood;
+  }
+
+  return entry.mood || null;
+}
+
 
 function getFlowsForDate(dateString) {
     return flowData[dateString] ? [flowData[dateString]] : [];
