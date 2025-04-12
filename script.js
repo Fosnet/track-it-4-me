@@ -978,8 +978,12 @@ document.getElementById("openConfigBtn").addEventListener("click", function() {
     document.getElementById("configMenu").style.display = "flex";
     const flowColourInput = document.getElementById('flow-colour');
     flowColourInput.style.backgroundColor = configData.flowColour || '#922B21';
+    flowColourInput.value = configData.flowColour;
+
     const predictionColourInput = document.getElementById('prediction-colour');
     predictionColourInput.style.backgroundColor = configData.predictionColour || '#D98880';
+    predictionColourInput.value = configData.predictionColour;
+
     adjustTextColor();
 });
 document.getElementById("closeConfigMenuBtn").addEventListener("click", function() {
