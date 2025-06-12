@@ -16,3 +16,10 @@ To access the site locally:
     - Settings > Download my data
     - Unzip file (enter password provided if requested)
     - Use `measurements.json`
+
+
+
+## Future updates
+- Mood predictions
+- Pain tracker
+- Pain predictions

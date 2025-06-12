@@ -4,7 +4,7 @@ let periodData = JSON.parse(localStorage.getItem('periodData')) || [];
 let moodData = JSON.parse(localStorage.getItem('moodData')) || {};
 let flowData = JSON.parse(localStorage.getItem('flowData')) || {};
 let notesData = JSON.parse(localStorage.getItem('notesData')) || {};
-let configData = JSON.parse(localStorage.getItem('configData')) || {flowColour: "#922B21", predictionColour: "#D98880", disablePredictions: false};
+let configData = JSON.parse(localStorage.getItem('configData')) || {flowColour: "#922B21", predictionColour: "#D98880", backgroundColour: "#000000", textColour: "#FFFFFF", disablePredictions: false};
 
 const moodList = [
   " ", "auto", "😃", "😢", "😡", "😰", "😴", "🤢", "😍", "🤯", "🤔"
@@ -964,15 +964,32 @@ function highlightEstimatedPeriod() {
 }
 
 function applyPreferences() {
+  if (!configData.flowColour) {configData.flowColour = "#922B21"}
   document.documentElement.style.setProperty('--flow-colour', configData.flowColour);
   const flowColourInput = document.getElementById('flow-colour');
   if (flowColourInput) {
     flowColourInput.value = configData.flowColour;
   }
+
+  if (!configData.predictionColour) {configData.predictionColour = "#D98880"}
   document.documentElement.style.setProperty('--prediction-colour', configData.predictionColour);
   const predictionColourInput = document.getElementById('prediction-colour');
   if (predictionColourInput) {
     predictionColourInput.value = configData.predictionColour;
+  }
+
+  if (!configData.backgroundColour) {configData.backgroundColour = "#000000"}
+  document.documentElement.style.setProperty('--background-colour', configData.backgroundColour);
+  const backgroundColourInput = document.getElementById('background-colour');
+  if (backgroundColourInput) {
+    backgroundColourInput.value = configData.backgroundColour;
+  }
+
+  if (!configData.textColour) {configData.textColour = "#FFFFFF"}
+  document.documentElement.style.setProperty('--text-colour', configData.textColour);
+  const textColourInput = document.getElementById('text-colour');
+  if (textColourInput) {
+    textColourInput.value = configData.textColour;
   }
   localStorage.setItem('configData', JSON.stringify(configData));
 }
@@ -989,6 +1006,14 @@ document.getElementById("openConfigBtn").addEventListener("click", function() {
 
     const predictionCheckbox = document.getElementById('prediction-checkbox');
     predictionCheckbox.checked = configData.disablePredictions;
+
+    const backgroundColourInput = document.getElementById('background-colour');
+    backgroundColourInput.style.backgroundColor = configData.backgroundColour || '#000000';
+    backgroundColourInput.value = configData.backgroundColour;
+
+    const textColourInput = document.getElementById('text-colour');
+    textColourInput.style.backgroundColor = configData.textColour || '#000000';
+    textColourInput.value = configData.textColour;
 
     adjustTextColor();
 });
@@ -1015,6 +1040,30 @@ document.getElementById("prediction-colour").addEventListener("input", function(
         configData.predictionColour = '#D98880';
     }
     document.documentElement.style.setProperty('--prediction-colour', configData.predictionColour);
+    adjustTextColor();
+    renderCalendar();
+    localStorage.setItem('configData', JSON.stringify(configData));
+});
+document.getElementById("background-colour").addEventListener("input", function(event) {
+    document.documentElement.style.setProperty('--background-colour', event.target.value);
+    if (isValidHex(event.target.value)) {
+        configData.backgroundColour = event.target.value;
+    } else {
+        configData.backgroundColour = '#000000';
+    }
+    document.documentElement.style.setProperty('--background-colour', configData.backgroundColour);
+    adjustTextColor();
+    renderCalendar();
+    localStorage.setItem('configData', JSON.stringify(configData));
+});
+document.getElementById("text-colour").addEventListener("input", function(event) {
+    document.documentElement.style.setProperty('--text-colour', event.target.value);
+    if (isValidHex(event.target.value)) {
+        configData.textColour = event.target.value;
+    } else {
+        configData.textColour = '#FFFFFF';
+    }
+    document.documentElement.style.setProperty('--text-colour', configData.textColour);
     adjustTextColor();
     renderCalendar();
     localStorage.setItem('configData', JSON.stringify(configData));
@@ -1069,15 +1118,23 @@ function getBrightness(colour) {
 function adjustTextColor() {
   const flowColour = configData.flowColour;
   const predictionColour = configData.predictionColour;
+  const backgroundColour = configData.backgroundColour;
+  const textColour = configData.textColour;
 
   const flowBrightness = getBrightness(flowColour);
   const predictionBrightness = getBrightness(predictionColour);
+  const backgroundBrightness = getBrightness(backgroundColour);
+  const textBrightness = getBrightness(textColour);
 
   const flowTextColour = flowBrightness < 0.5 ? "#ffffff" : "#000000";
   const predictionTextColour = predictionBrightness < 0.5 ? "#ffffff" : "#000000";
+  const backgroundTextColour = backgroundBrightness < 0.5 ? "#ffffff" : "#000000";
+  const textTextColour = textBrightness < 0.5 ? "#ffffff" : "#000000";
 
   document.getElementById("flow-colour").style.color = flowTextColour;
   document.getElementById("prediction-colour").style.color = predictionTextColour;
+  document.getElementById("background-colour").style.color = backgroundTextColour;
+  document.getElementById("text-colour").style.color = textTextColour;
 }
 
 const flowColourInput = document.getElementById('flow-colour');
@@ -1097,6 +1154,26 @@ predictionColourInput.addEventListener('input', function() {
         predictionColourInput.style.backgroundColor = colour;
     } else {
         predictionColourInput.style.backgroundColor = '#D98880';
+    }
+    adjustTextColor();
+});
+const backgroundColourInput = document.getElementById('background-colour');
+backgroundColourInput.addEventListener('input', function() {
+    const colour = backgroundColourInput.value;
+    if (isValidHex(colour)) {
+        backgroundColourInput.style.backgroundColor = colour;
+    } else {
+        backgroundColourInput.style.backgroundColor = '#000000';
+    }
+    adjustTextColor();
+});
+const textColourInput = document.getElementById('text-colour');
+textColourInput.addEventListener('input', function() {
+    const colour = textColourInput.value;
+    if (isValidHex(colour)) {
+        textColourInput.style.backgroundColor = colour;
+    } else {
+        textColourInput.style.backgroundColor = '#FFFFFF';
     }
     adjustTextColor();
 });

@@ -1,5 +1,8 @@
 # CHANGELOG
 
+## 0.1.5 - 2025/06/12
+- Added background/text to user preferences
+
 ## 0.1.4 - 2025/04/12
 - Added ability to track moods hourly
 - Added generic notes field

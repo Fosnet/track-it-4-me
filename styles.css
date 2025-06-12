@@ -1,6 +1,6 @@
 body {
-  color: white;
-  background-color: black;
+  color:var(--text-colour);
+  background-color:var(--background-colour);
   font-size: 18px;
   font-family: sans-serif;
 }
@@ -83,6 +83,7 @@ body {
 
 .date-cell.weekend {
   background-color: #707070;
+  opacity: 0.85;
 }
 
 .date-cell.red {
